@@ -1,0 +1,400 @@
+﻿整个测试过程是这样的：首先通过从外部文件中读取测试数据，测试对象元素，使用selenium在浏览器中模拟手工操作对系统进行必要的业务测试，测试完成后生成测试报告并邮件发送给测试人员
+整体结构如下：
+
+测试数据、页面元素
+↓  输入
+测试工具类：日志类，封装基类，配置文件的读取等
+系统页面：测试组件（公共、以业务模块为单位的业务组件）
+测试套件：测试场景（业务流程）
+测试执行器：控制流程的执行
+↓
+测试执行：1、定时触发：Jenkins
+↓  输出
+测试结果：测试报告
+
+
+1.环境准备
+	eclipse ：需安装pydev、testng插件
+	python ：安装python完成后，需 pip下安装selenium：命令： pip install selenium
+	我现在的环境：eclipse【 Neon.3 Release (4.6.3)】+JDK1.8+python3.6.3+pydev 6.4.4+selenium3.8.1
+2.eclipse创建python项目
+	2.1首先，创建一个python项目，随便取个名字：XXXXXXX
+	2.2创建项目会用到的文件夹，命名如下：
+		src：框架主要代码，很重要！！
+			framework:主要实现配置文件的读取，日志类，读取数据库，selenium常用方法封装，浏览器启动类等
+			pageobject
+			test
+			testruner
+			testsuit
+		config:配置文件，配置url，数据库等
+		data:放的测试案例的数据—因为表太多，现在不用了，数据改放在了数据库中
+		logs:顾名思义，放生成的日志
+		PageElements:放需要的页面元素
+		report:生成的测试报告会在这里
+		result:本来想放具体的测试结果，如哪条案例未通过放这里！！现在也没啥用！可以不用
+		screenshots:放运行错误后的截图
+		tools:工具类：如驱动啥的
+3.测试数据准备
+	3.1 测试元素表
+		浏览器中打开要测试的页面，使用firebug或firepath获取元素定位的方法，写入表格中。
+		在工作路径PageElement下新建excle表：login.xlsx,sheet名为：登陆，
+		示例如下：
+		名称			说明	类别			元素定位			备注
+		input_username  用户名	id				userName
+		input_userpwd	密码	id				userPW
+		login_btn		登陆	id				login
+		logout			登出	css_selector	span.text-danger
+	3.2测试数据表**【现在改放在数据库中，可以不要】**
+		这里，在data文件夹下新建一个表，表中内容为你需要输入的数据
+4.测试主框架的搭建,到这里，才是重点!!!
+	4.1框架目录
+		AutoTest
+			src：
+				framework：自动化测试框架的支撑，主要实现功能为对selenium一些常用方法的封装，配置文件的读取、测试数据的读取，浏览器驱动的调用，日志文件的创建等；
+					__init__.py
+					basepage.py:封装对页面的基本操作，其中包含：查找元素、点击元素、输入、下拉选择、切换iframe，执行js等
+					browser_engine.py: 浏览器引擎配置，封装对浏览器的操作
+					database.py :读取数据库的类
+					logger.py:日志配置，log4j定义了8个级别的log（除去OFF和ALL，可以说分为6个级别），优先级从高到低依次为：OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、 ALL。
+					readexcle.py:主要获取表中的数据
+					readjson.py
+				pageobject：采用了页面对象模型Page-Object的思想，将被测系统的每个页面对应成一个页面类，将每个页面对象的唯一属性存放于页面元素表中，并通过该页面类进行读取，实现该页面的操作方法，如：输入，点击等操作
+				test：自测用的，可以不要
+				testrunner：用来执行加载测试用例，并执行用例，且提供测试输出的一个组件。test runner可以加载test case或者test suite进行执行测试任务。
+				testsuit：测试套件。测试套件是很多测试用例的集合，一个测试套件可以随意管理多个测试用例
+			config
+				config.ini
+			data
+			logs
+	4.2框架之-----浏览器引擎配置 browser-engine类
+		4.2.1.config下新建：config.ini
+		文件内容如下：
+			#  this is config file, only store browser type and server URL  
+
+			[browserType]  
+			browserName = Firefox  
+			#browserName = Chrome  
+			#browserName = IE  
+			  
+			[testServer]  
+			URL = http://XXXXXXXXXXXXXXX  #输入你要测得url地址
+			#URL = http://www.google.com 
+		4.2.2 framework下新建  browser_engine.py 封装对浏览器的操作
+			from selenium import webdriver
+			import configparser
+			import sys,os
+			class Browser(object):
+		   
+			# 打开浏览器
+			def open_browser(self):  
+				config = configparser.ConfigParser()
+				dir = os.path.abspath('.').split('src')[0]
+				config.read( dir+"/config/config.ini")   
+				browser = config.get("browserType", "browserName") 
+				logger.info("You had select %s browser." % browser) 
+				url = config.get("testServer", "URL")  
+				if browser == "Firefox":  
+					self.driver = webdriver.Firefox()  
+				elif browser == "Chrome":  
+					self.driver = webdriver.Chrome()    
+				elif browser == "IE":  
+					self.driver = webdriver.Ie() 
+				self.driver.set_window_size(1920,1080) #分辨率
+				#self.driver.maximize_window()#最大化
+				self.driver.get(url) 
+				return self.driver   
+			 
+			# 打开url站点
+			def open_url(self, url):  
+				self.driver.get(url)  
+
+			# 关闭浏览器    
+			def quit_browser(self):
+				self.driver.quit()
+
+			# 浏览器前进操作
+			def forward(self):
+				self.driver.forward()
+
+			# 浏览器后退操作
+			def back(self):
+				self.driver.back()
+		   
+			# 隐式等待
+			def wait(self, seconds):
+				self.driver.implicitly_wait(seconds)
+	4.3 框架之-----日志配置 logger类
+		4.3.1 framework下新建logger.py
+			import logging
+			import time
+			import os
+			class Logger(object):
+
+				def __init__(self, logger):
+					
+					'指定保存日志的文件路径，日志级别，以及调用文件,将日志存入到指定的文件中'
+					
+					# 创建一个logger
+					self.logger = logging.getLogger(logger)  
+					#self.logger.setLevel(logging.DEBUG)  
+					# 创建一个handler，用于写入日志文件
+					rq = time.strftime('%Y%m%d%H%M', time.localtime(time.time()))  
+			 
+					log_dir = os.path.abspath('.').split('src')[0] + '/logs/'
+					log_name = log_dir + rq + '.log'  
+					fh = logging.FileHandler(log_name) 
+					 
+					fh.setLevel(logging.INFO)    
+
+					# 再创建一个handler，用于输出到控制台
+					ch = logging.StreamHandler()  
+					#ch.setLevel(logging.INFO)  
+					ch.setLevel(logging.ERROR)
+					# 定义handler的输出格式
+					formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')  
+					fh.setFormatter(formatter)  
+					ch.setFormatter(formatter)  
+					
+					# 给logger添加handler
+					self.logger.addHandler(fh)  
+					self.logger.addHandler(ch)  
+
+
+				def getlog(self):  
+					return self.logger 
+		4.3.2 其他类中引用日志类,在其他类前面先导入日志类：
+			from framework.logger import Logger
+			logger = Logger("XXXXX页面").getlog()
+			在你想打印日志的地方加上：
+			logger.info(XXXXXX)
+			logger.error(XXXXX) 
+			#可参考下面的类
+	4.4框架之-----selenium二次封装 basepage类
+			framework下新建basepage.py封装对页面的基本操作，其中包含：查找元素、点击元素、输入、下拉选择、切换iframe，执行js等
+			
+			import time  
+			from selenium.common.exceptions import NoSuchElementException  
+			from selenium.webdriver.common.action_chains import ActionChains
+			import os.path  
+			from framework.logger import Logger
+			from selenium.webdriver.support.select import Select
+			from selenium.webdriver.common.keys import Keys
+			from random import choice
+			logger = Logger("BasePage").getlog()
+
+			class BasePage(object):
+				"定义一个页面基类，让所有页面都继承这个类，封装一些常用的页面操作方法到这个类"
+
+				def __init__(self, driver):
+					self.driver = driver
+				
+				# 查找元素
+				def find_element(self, selector):
+					element = ''
+					if '=>' not in selector:  
+						return self.driver.find_element_by_id(selector)  
+					selector_by = selector.split('=>')[0]  
+					selector_value = selector.split('=>')[1]  
+					if selector_by == 'id':  
+						try:  
+							element = self.driver.find_element_by_id(selector_value)  
+							logger.info("Had find the element \' %s \' successful "  
+										"by %s via value: %s " % (element.text, selector_by, selector_value))  
+						except NoSuchElementException as e:  
+							logger.error("NoSuchElementException: %s" % e)  
+					elif selector_by == "n" or selector_by == 'name':  
+						element = self.driver.find_element_by_name(selector_value)  
+					elif  selector_by == 'css_selector':  
+						element = self.driver.find_element_by_css_selector(selector_value)  
+					elif  selector_by == 'classname':  
+						element = self.driver.find_element_by_class_name(selector_value)
+					elif selector_by == "l" or selector_by == 'link_text':  
+						element = self.driver.find_element_by_link_text(selector_value)  
+					elif selector_by == "p" or selector_by == 'partial_link_text':  
+						element = self.driver.find_element_by_partial_link_text(selector_value)  
+					elif selector_by == "t" or selector_by == 'tag_name':  
+						element = self.driver.find_element_by_tag_name(selector_value)  
+					elif selector_by == "x" or selector_by == 'xpath':  
+						try:  
+							element = self.driver.find_element_by_xpath(selector_value)  
+							logger.info("Had find the element \' %s \' successful "  
+											"by %s via value: %s " % (element.text, selector_by, selector_value))  
+						except NoSuchElementException as e:  
+							logger.error("NoSuchElementException: %s" % e)   
+					elif selector_by == "s" or selector_by == 'selector_selector':  
+						element = self.driver.find_element_by_css_selector(selector_value)  
+					else:  
+						raise NameError("Please enter a valid type of targeting elements.")        
+					return element
+				
+				# 输入
+				def input(self, selector, text):   
+					el = self.find_element(selector)   
+					try:  
+						el.clear() 
+						el.send_keys(text)  
+						logger.info("Had type \' %s \' in inputBox" % text)  
+					except NameError as e:  
+						logger.error("Failed to type in input box with %s" % e)
+					   
+				@staticmethod
+				def sleep(seconds):
+					time.sleep(seconds)
+					logger.info("Sleep for %d seconds" % seconds)
+						
+				# 点击
+				def click(self, selector):   
+					el = self.find_element(selector)  
+					try:  
+						el.click()  
+						#logger.info("The element \' %s \' was clicked." % el.text)  
+					except NameError as e:  
+						logger.error("Failed to click the element with %s" % e) 
+						
+				# 切到iframe
+				def switch_frame(self):
+					iframe = self.find_element('classname=>embed-responsive-item')  
+					try:  
+						self.driver.switch_to_frame(iframe) 
+						# logger.info("The element \' %s \' was clicked." % iframe.text)  
+					except NameError as e:  
+						logger.error("Failed to click the element with %s" % e) 
+						
+				# 处理标准下拉选择框,随机选择
+				def select(self, id):   
+					select1 = self.find_element(id)  
+					try:  
+						options_list=select1.find_elements_by_tag_name('option')
+						del options_list[0]
+						s1=choice(options_list)
+						Select(select1).select_by_visible_text(s1.text)
+						logger.info("随机选的是：%s" % s1.text) 
+					except NameError as e:  
+						logger.error("Failed to click the element with %s" % e)  
+						
+				# 执行js
+				def execute_js(self, js):      
+					self.driver.execute_script(js)
+					
+				# 模拟回车键
+				def enter(self, selector):
+					e1 = self.find_element(selector)
+					e1.send_keys(Keys.ENTER)
+					# 模拟鼠标左击
+				def leftclick(self, element):
+					#e1 = self.find_element(selector)
+					ActionChains(self.driver).click(element).perform()
+				
+				# 截图，保存在根目录下的screenshots  
+				def take_screenshot(self):  
+					screen_dir = os.path.dirname(os.path.abspath('../..')) + '/screenshots/'
+					rq = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))  
+					screen_name = screen_dir + rq + '.png'  
+					try :  
+						self.driver.get_screenshot_as_file(screen_name)  
+						logger.info("Had take screenshot and saved!")    
+					except Exception as e:  
+						logger.error("Failed to take screenshot!", format(e))    
+				def isElementExist(self,xpath):
+					flag=True
+					driver=self.driver
+					try:
+						driver.find_element_by_xpath(xpath)
+						return flag
+					except:
+						flag=False
+						return flag
+
+	4.5框架之-----读表操作封装【现在有些方法不需要了，因为是从数据库读】
+
+		framework下新建readexcle.py,主要获取表中的数据
+		需先pip安装：xlrd
+		
+		import xlrd
+		class ReadExcle(object):
+			'''
+			classdoc
+			'''
+			def __init__(self,file,tag='True'):
+				self.file=file
+				self.tag=tag
+				
+			'''
+						输入参数，返回某个sheet列表中的所有值
+				sheetname:excel文件的具体sheet名称
+				n：开始行数，从第n行开始读
+				num:读取num行
+			'''  
+			def read(self,sheetname,n=1,num=1000):#i,sheet索引
+				ExcelFile = xlrd.open_workbook(self.file)
+				table = ExcelFile.sheet_by_name(sheetname)
+				nrows = table.nrows #行数
+				ncols = table.ncols #列数
+				j = 0 #循环次数
+				for row in range(1,nrows):
+					j+=1
+					line = []
+					if self.tag == 'True':
+						for col in range(0,ncols):
+							line.append(table.cell(row,col).value)
+						yield line   
+					elif self.tag == 'False':
+						if j >= n and j< n+num:
+							for col in range(0,ncols):
+								line.append(table.cell(row,col).value)           
+							yield line
+			'''
+						 读取页面元素表
+				 list1 页面元素路径列表
+				 list2 页面元素js列表
+			'''  
+			def get(self,sheetname):
+				ExcelFile=xlrd.open_workbook(self.file)
+				sheet=ExcelFile.sheet_by_name(sheetname)#'Sheet1'
+				nrows = sheet.nrows #总行数
+				list0=[]#元素名称列表
+				list1=[]#元素路径列表
+				list2=[]#js列表
+				for i in range(1,nrows):#i为行数  
+					if sheet.row(i)[2].value != 'null':
+						r1=sheet.row(i)[2].value
+						r2=sheet.row(i)[3].value
+						list0.append(sheet.row(i)[0].value)
+						list1.append(r1+'=>'+r2)
+						dict1=dict(zip(list0,list1))
+					else:
+						list2.append(sheet.row(i)[3].value)
+				return dict1,list2 
+			 
+			'''
+						返回excel文件具体sheet的具体某个单元格的值
+				i,j为单元格所在位置
+			''' 
+			def read_1(self,sheetname,i,j):
+				ExcelFile = xlrd.open_workbook(self.file)
+				table = ExcelFile.sheet_by_name(sheetname)
+				#print(table.cell(1,0).value)
+				return table.cell(i,j).value
+			'''
+					   读取给定列数，如读取该表中第3列~5列
+			'''  
+			def read_ncols(self,sheetname,ncols,n=1,num=1000):#i,sheet索引
+				ExcelFile = xlrd.open_workbook(self.file)
+				table = ExcelFile.sheet_by_name(sheetname)
+				nrows = table.nrows #行数
+				ncols = table.ncols #列数
+				j = 0 #循环次数
+				for row in range(1,nrows):
+					j+=1
+					line = []
+					if self.tag == 'True':
+						for col in range(0,ncols):
+							line.append(table.cell(row,col).value)
+						yield line   
+					elif self.tag == 'False':
+						if j >= n and j< n+num:
+							for col in range(0,ncols):
+								line.append(table.cell(row,col).value)           
+							yield line
+
+

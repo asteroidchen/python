@@ -1,0 +1,139 @@
+　1、启动MySQL服务器
+　　实际上上篇已讲到如何启动MySQL。两种方法：
+　　一是用winmysqladmin，如果机器启动时已自动运行，则可直接进入下一步操作。
+　　二是在DOS方式下运行
+　　d:/mysql/bin/mysqld
+
+　　2、进入mysql交互操作界面
+　　在DOS方式下，运行：
+　　d:/mysql/bin/mysql -u root -p
+　　出现提示符，此时已进入mysql的交互操作方式。
+　　如果出现 "ERROR 2003: Can‘t connect to MySQL server on ‘localhost‘ (10061)“，说明你的MySQL还没有启动。
+
+　　3、退出MySQL操作界面
+　　在mysql>提示符下输入quit可以随时退出交互操作界面：
+　　mysql> quit
+　　Bye
+　　你也可以用control-D退出。
+
+　　4、第一条命令
+　　mysql> select version(),current_date();
+　　+----------------+-----------------+
+　　| version() | current_date() |
+　　+----------------+-----------------+
+　　| 3.23.25a-debug | 2001-05-17 |
+　　+----------------+-----------------+
+　　1 row in set (0.01 sec)
+　　此命令要求mysql服务器告诉你它的版本号和当前日期。尝试用不同大小写操作上述命令，看结果如何。
+　　结果说明mysql命令的大小写结果是一致的。
+　　练习如下操作：
+　　mysql>Select (20+5)*4;
+　　mysql>Select (20+5)*4,sin(pi()/3);
+　　mysql>Select (20+5)*4 AS Result,sin(pi()/3); (AS: 指定假名为Result)
+
+　　5、多行语句
+　　一条命令可以分成多行输入，直到出现分号“;”为止：
+　　mysql> select
+　　-> USER()
+　　-> ,
+　　-> now()
+　　->;
+　　+--------------------+-----------------------------+
+　　| USER() | now() |
+　　+--------------------+-----------------------------+
+　　| ODBC@localhost| 2001-05-17 22:59:15 |
+　　+--------------------+-----------------------------+
+
+　　6、使用SHOW语句找出在服务器上当前存在什么数据库：
+　　mysql> SHOW DATABASES;
+　　+----------+
+　　| Database |
+　　+----------+
+　　| mysql |
+　　| test |
+　　+----------+
+　　3 rows in set (0.00 sec)
+
+　　7、创建一个数据库abccs
+　　mysql> CREATE DATABASE abccs;
+　　注意不同操作系统对大小写的敏感。
+
+　　8、选择你所创建的数据库
+　　mysql> USE abccs
+　　Database changed
+　　此时你已经进入你刚才所建立的数据库abccs.
+
+　　9、 创建一个数据库表
+　　首先看现在你的数据库中存在什么表：
+　　mysql> SHOW TABLES;
+　　Empty set (0.00 sec)
+　　说明刚才建立的数据库中还没有数据库表。
+
+
+
+　　MySql常用命令有哪些？
+　　1、使用SHOW语句找出在服务器上当前存在什么数据库：
+　　mysql> SHOW DATABASES;
+
+　　2、创建一个数据库MYSQLDATA
+　　mysql> CREATE DATABASE MYSQLDATA;
+
+　　3、选择你所创建的数据库
+　　mysql> USE MYSQLDATA; (按回车键出现Database changed 时说明操作成功!)
+
+　　4、查看现在的数据库中存在什么表
+　　mysql> SHOW TABLES;
+
+　　5、创建一个数据库表
+　　mysql> CREATE TABLE MYTABLE (name VARCHAR(20), sex CHAR(1));
+
+　　6、显示表的结构：
+　　mysql> DESCRIBE MYTABLE;
+
+　　7、往表中加入记录
+　　mysql> insert into MYTABLE values (”hyq”,”M”);
+
+　　8、用文本方式将数据装入数据库表中(例如D:/mysql.txt)
+　　mysql> LOAD DATA LOCAL INFILE “D:/mysql.txt” INTO TABLE MYTABLE;
+
+　　9、导入.sql文件命令(例如D:/mysql.sql)
+　　mysql>use database;
+　　mysql>source d:/mysql.sql;
+
+　　10、删除表
+　　mysql>drop TABLE MYTABLE;
+
+　　11、清空表
+　　mysql>delete from MYTABLE;
+
+　　12、更新表中数据
+　　mysql>update MYTABLE set sex=”f” where name=’hyq’;
+
+
+
+
+
+
+
+mysql5.7默认没有生成data目录，需要使用命令手动初始化一下。 
+步骤如下： 
+进入mysql安装bin目录下 
+1 执行 mysqld.exe -nt remove 
+2 执行 mysqld –initialize（中间是两个中划线） 
+3 执行 mysqld.exe -nt install 
+4 执行 net start mysql
+
+如果执行第4步时，如果报错 
+C:\Program Files\MySQL\MySQL Server 5.7\bin>net start mysql
+
+MySQL 服务正在启动 . MySQL 服务无法启动。
+
+服务没有报告任何错误。
+
+请键入 NET HELPMSG 3534 以获得更多的帮助。
+
+则删除mysql安装目录下的data目录，将4个步骤重新执行一遍。
+
+
+
+

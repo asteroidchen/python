@@ -1,0 +1,326 @@
+一、基础语法篇
+计算器
+
+python
+复制
+def calculator(a, b, op):
+    if op == '+': return a + b
+    elif op == '-': return a - b
+    elif op == '*': return a * b
+    elif op == '/': return a / b if b != 0 else "Error"
+print(calculator(5, 3, '+'))  # 输出 8
+猜数字游戏
+
+python
+复制
+import random
+target = random.randint(1, 100)
+while True:
+    guess = int(input("输入1-100之间的数字: "))
+    if guess == target: print("猜对了!"); break
+    elif guess < target: print("猜小了")
+    else: print("猜大了")
+斐波那契数列
+
+python
+复制
+def fibonacci(n):
+    a, b = 0, 1
+    for _ in range(n):
+        print(a, end=' ')
+        a, b = b, a + b
+fibonacci(10)  # 0 1 1 2 3 5 8 13 21 34
+九九乘法表
+
+python
+复制
+for i in range(1, 10):
+    for j in range(1, i+1):
+        print(f"{j}x{i}={i*j}", end='\t')
+    print()
+判断素数
+
+python
+复制
+def is_prime(n):
+    if n < 2: return False
+    for i in range(2, int(n**0.5)+1):
+        if n % i == 0: return False
+    return True
+print(is_prime(17))  # True
+二、数据处理篇
+CSV转JSON
+
+python
+复制
+import csv
+import json
+
+with open('data.csv', 'r') as f:
+    reader = csv.DictReader(f)
+    data = list(reader)
+
+with open('data.json', 'w') as f:
+    json.dump(data, f, indent=4)
+Excel合并单元格
+
+python
+复制
+import pandas as pd
+
+df1 = pd.read_excel('file1.xlsx')
+df2 = pd.read_excel('file2.xlsx')
+merged = pd.concat([df1, df2], ignore_index=True)
+merged.to_excel('combined.xlsx', index=False)
+PDF文本提取
+
+python
+复制
+import PyPDF2
+
+with open('doc.pdf', 'rb') as f:
+    reader = PyPDF2.PdfReader(f)
+    text = ''.join([page.extract_text() for page in reader.pages])
+print(text[:200])  # 输出前200字符
+图片格式批量转换
+
+python
+复制
+from PIL import Image
+import os
+
+for filename in os.listdir('images'):
+    if filename.endswith('.png'):
+        img = Image.open(f'images/{filename}')
+        img.save(f'converted/{filename.replace("png", "jpg")}')
+数据清洗（去重+填充空值）
+
+python
+复制
+import pandas as pd
+
+df = pd.read_csv('data.csv')
+df.drop_duplicates(inplace=True)
+df.fillna(df.mean(), inplace=True)
+三、网络与爬虫篇
+网页内容抓取
+
+python
+复制
+import requests
+from bs4 import BeautifulSoup
+
+url = 'https://example.com'
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+print(soup.title.text)
+API数据获取（GitHub用户信息）
+
+python
+复制
+import requests
+
+username = 'torvalds'
+url = f'https://api.github.com/users/{username}'
+response = requests.get(url)
+data = response.json()
+print(f"姓名: {data['name']}, 仓库数: {data['public_repos']}")
+多线程爬虫
+
+python
+复制
+import threading
+import requests
+
+def crawl(url):
+    response = requests.get(url)
+    print(f"{url} 状态码: {response.status_code}")
+
+urls = ['https://example.com/page1', 'https://example.com/page2']
+threads = [threading.Thread(target=crawl, args=(url,)) for url in urls]
+for t in threads: t.start()
+for t in threads: t.join()
+Scrapy爬虫框架示例
+
+python
+复制
+# 创建项目: scrapy startproject myproject
+# 定义Spider
+import scrapy
+
+class MySpider(scrapy.Spider):
+    name = 'example'
+    start_urls = ['https://example.com']
+
+    def parse(self, response):
+        yield {'title': response.css('h1::text').get()}
+验证码识别（需安装tesseract）
+
+python
+复制
+from PIL import Image
+import pytesseract
+
+img = Image.open('captcha.png')
+text = pytesseract.image_to_string(img)
+print(f"识别结果: {text}")
+四、自动化与办公篇
+批量重命名文件
+
+python
+复制
+import os
+
+folder = 'docs'
+for idx, filename in enumerate(os.listdir(folder)):
+    new_name = f'doc_{idx+1}.txt'
+    os.rename(os.path.join(folder, filename), os.path.join(folder, new_name))
+自动发送邮件
+
+python
+复制
+import smtplib
+from email.mime.text import MIMEText
+
+msg = MIMEText('邮件内容')
+msg['Subject'] = '测试邮件'
+msg['From'] = 'sender@example.com'
+msg['To'] = 'receiver@example.com'
+
+with smtplib.SMTP('smtp.example.com', 587) as server:
+    server.starttls()
+    server.login('user', 'password')
+    server.send_message(msg)
+微信消息监控（需安装itchat）
+
+python
+复制
+import itchat
+
+@itchat.msg_register(itchat.content.TEXT)
+def reply(msg):
+    print(f"收到消息: {msg['Text']}")
+    return '自动回复: 消息已收到'
+
+itchat.auto_login()
+itchat.run()
+Excel自动报表生成
+
+python
+复制
+import pandas as pd
+from openpyxl import load_workbook
+
+df = pd.DataFrame({'销售额': [100, 200, 150]})
+with pd.ExcelWriter('report.xlsx', engine='openpyxl') as writer:
+    df.to_excel(writer, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    worksheet['D1'] = '总销售额'
+    worksheet['D2'] = df['销售额'].sum()
+定时任务调度
+
+python
+复制
+import schedule
+import time
+
+def job():
+    print("任务执行中...")
+
+schedule.every(10).seconds.do(job)
+while True:
+    schedule.run_pending()
+    time.sleep(1)
+五、GUI开发篇
+简易计算器（Tkinter）
+
+python
+复制
+import tkinter as tk
+
+def calculate():
+    try:
+        result = eval(entry.get())
+        label.config(text=f"结果: {result}")
+    except: label.config(text="输入错误")
+
+root = tk.Tk()
+entry = tk.Entry(root)
+entry.pack()
+tk.Button(root, text="计算", command=calculate).pack()
+label = tk.Label(root)
+label.pack()
+root.mainloop()
+文件选择对话框
+
+python
+复制
+from tkinter import filedialog
+
+root = tk.Tk()
+root.withdraw()  # 隐藏主窗口
+file_path = filedialog.askopenfilename()
+print("选择文件:", file_path)
+天气查询工具
+
+python
+复制
+import requests
+import tkinter as tk
+
+def get_weather():
+    city = entry.get()
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid=YOUR_KEY"
+    response = requests.get(url)
+    data = response.json()
+    temp = data['main']['temp'] - 273.15
+    label.config(text=f"温度: {temp:.1f}°C")
+
+root = tk.Tk()
+entry = tk.Entry(root)
+entry.pack()
+tk.Button(root, text="查询", command=get_weather).pack()
+label = tk.Label(root)
+label.pack()
+root.mainloop()
+六、算法与数据结构
+快速排序
+
+python
+复制
+def quick_sort(arr):
+    if len(arr) <= 1: return arr
+    pivot = arr[len(arr)//2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+print(quick_sort([3,6,8,10,1,2,1]))  # [1, 1, 2, 3, 6, 8, 10]
+二叉树遍历
+
+python
+复制
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+
+def inorder(root):
+    return inorder(root.left) + [root.val] + inorder(root.right) if root else []
+七、机器学习入门
+手写数字识别（MNIST）
+
+python
+复制
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target)
+model = SVC()
+model.fit(X_train, y_train)
+print("准确率:", model.score(X_test, y_test))

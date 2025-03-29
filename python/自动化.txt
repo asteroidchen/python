@@ -1,0 +1,70 @@
+﻿Commmand						描述
+driver.get("URL")					导航到应用程序
+element.sendKeys("inputtext")				输入一些文本输入框
+element.clear()					从输入框清空内容
+select.deselectAll()					这将取消选择页面上的第一个选择所有选项：
+select.selectByVisibleText("some text")			select the OPTION with the input specified by the user.
+driver.switchTo().window("windowName")			Moving the focus from one window to another
+driver.switchTo().frame("frameName")			swing from frame to frame
+driver.switchTo().alert()				Helps in handling alerts
+driver.navigate().to("URL")				Navigate to the URL
+driver.navigate().forward()				To Navigate forward
+driver.navigate().back()				To Navigate back
+driver.close()					Closes the current Browser associated with the driver
+driver.quit()					Quits the driver and closes all the associated window of that driver.
+driver.refresh()					Refreshes the current page.
+
+
+By ID						driver.findElement(By.id(<element ID>))
+定位元素使用ID属性					driver.findElement(By.id("cdensity")).sendKeys("10");
+By name						driver.findElement(By.name(<element name>))
+定位使用Name属性的元素				driver.findElement(By.name("cdensity")).sendKeys("10");
+By class name					driver.findElement(By.className(<element class>))		
+定位使用类属性的元素				List<WebElement> byclass = driver.findElements(By.className("smalltext smtb"));
+By tag name					driver.findElement(By.tagName(<htmltagname>))			
+定位使用HTML标记元素				WebElement table = driver.findElement(By.id("calctable"));
+						List<WebElement> row = table.findElements(By.tagName("tr"));
+									int rowcount = row.size();
+By link text					driver.findElement(By.linkText(<linktext>))				
+定位使用的链接文字链接				driver.findElements(By.linkText("Volume")).click();
+By partial link text					driver.findElement(By.partialLinkText(<linktext>))		
+定位链接使用链接的文字部分				driver.findElements(By.partialLinkText("Volume")).click();
+By CSS						driver.findElement(By.cssSelector(<css selector>))		
+定位使用CSS选择器的元素				WebElement loginButton = driver.findElement(By.cssSelector("input.login"));
+By XPath						driver.findElement(By.xpath(<xpath>))					
+定位使用XPath查询元素				driver.findElement(By.xpath(".//*[@id='content']/table[1]/tbody/tr/td/table
+
+
+
+Log日志级别分类与等级关系
+
+Off：OFF Level 是最高等级的，用于关闭所有日志记录。
+FATAL 致命的错误：FATAL level 指出每个严重的错误事件将会导致应用程序的退出。
+ERROR 错误：ERROR level 指出虽然发生错误事件，但仍然不影响系统的继续运行。
+WARN 警告：WARN level 表明会出现潜在错误的情形。
+INFO 信息：INFO level 表明 消息在粗粒度级别上突出强调应用程序的运行过程。
+DEBUG 调试：DEBUG Level 指出细粒度信息事件对调试应用程序是非常有帮助的。
+TRACE：与DEBUG 相比更细致化的记录事件消息。
+ALL：ALL Level 是最低等级的，用于打开所有日志记录。
+
+从高到地低
+OFF 、 FATAL 、 ERROR 、 WARN 、 INFO 、 DEBUG 、 TRACE 、 ALL
+
+
+
+Annotation  	描述
+@BeforeSuite	被注释的方法将只在这个套件中的所有测试运行之前运行一次。
+@AfterSuite 	被注释的方法将只在这个套件中的所有测试都运行后，运行一次。
+@BeforeClass	带注释的方法将只调用在当前类中的第一测试方法之前运行一次。
+@AfterClass 	带注释的方法将仅在当前类中的所有的测试方法已经被执行之后运行一次。
+@BeforeTest 	属于类<测试>中的任何测试方法标记运行之前被注释的方法将被运行。
+@AfterTest  	被注释的方法都将属于该类别的<测试>标签内的测试方法运行后运行。
+@BeforeGroups	这种配置方法，将之前运行的组的列表。此方法是保证属于任何这些基团的被调用的第一测试方法之前短暂运行。
+@AfterGroups	这种配置方法，将后运行的组的列表。这个方法保证了属于任何这些基团的被调用的最后一个测试方法之后不久运行。
+@BeforeMethod	被注释的方法将每个测试方法之前运行。
+@AfterMethod	被注释的方法将每个测试方法之后运行。
+@DataProvider	标记的方法为测试方法提供数据。被注释的方法必须返回一个Object[] []，其中每个Object []对象可以分配的测试方法的参数列表。想从这个DataProvider接收数据的@Test方法需要使用dataProvider名称等于这个注解的名字。
+@Factory    	将方法标记为一个工厂，返回将使用了TestNG作为测试类的对象。该方法必须返回一个Object[]。
+@Listeners  	定义了一个测试类监听器。
+@Parameters 	介绍了如何将参数传递到一个方法@Test。
+@Test       	标志着一个类或方法作为测试的一部分。
